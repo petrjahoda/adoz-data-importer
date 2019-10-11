@@ -26,7 +26,7 @@ type ZAPSI_OPERACE struct {
 }
 
 type user struct {
-	OID        int    `gorm:"column:OID"`
+	OID        int    `gorm:"primary_key;column:OID"`
 	Login      string `gorm:"column:Login"`
 	Password   string `gorm:"column:Password"`
 	Name       string `gorm:"column:Name"`

@@ -33,27 +33,7 @@ func main() {
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
 
 			userProcessingStart := time.Now()
-			for _, person := range persons {
-				personInZapsi := false
-				for _, zapsiUser := range users {
-					if person.ID_CisP == zapsiUser.Barcode {
-						personInZapsi = true
-						LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid to "+person.RFID)
-						err := UpdateUser(zapsiUser, person)
-						if err != nil {
-							LogError("MAIN", "Problem updating user: "+err.Error())
-							break
-						}
-						break
-					}
-				}
-				if !personInZapsi {
-					err := AddUser(person)
-					if err != nil {
-						LogError("MAIN", "Problem adding user "+person.JMENO+" "+person.PRIJMENI+": "+err.Error())
-					}
-				}
-			}
+			ProcessUsers(persons, users)
 			LogInfo("MAIN", "Users processed after "+time.Now().Sub(userProcessingStart).String())
 
 			orderProcessingStart := time.Now()
@@ -79,6 +59,29 @@ func main() {
 		time.Sleep(1*time.Minute - time.Now().Sub(start))
 	}
 
+}
+
+func ProcessUsers(persons []ZAPSI_PERS, users []user) {
+	for _, person := range persons {
+		personInZapsi := false
+		for _, zapsiUser := range users {
+			if person.ID_CisP == zapsiUser.Barcode {
+				personInZapsi = true
+				LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid to ["+person.RFID+"]")
+				err := UpdateUser(zapsiUser, person)
+				if err != nil {
+					LogError("MAIN", "Problem updating user: "+err.Error())
+				}
+				break
+			}
+		}
+		if !personInZapsi {
+			err := AddUser(person)
+			if err != nil {
+				LogError("MAIN", "Problem adding user "+person.JMENO+" "+person.PRIJMENI+": "+err.Error())
+			}
+		}
+	}
 }
 
 func AddUser(person ZAPSI_PERS) error {
@@ -122,10 +125,8 @@ func UpdateUser(zapsiUser user, person ZAPSI_PERS) error {
 		return err
 	}
 	defer db.Close()
-	userToUpdate := user{}
-	db.Table("user").Where("Barcode = ?", zapsiUser.Barcode).First(&userToUpdate)
-	userToUpdate.Rfid = person.RFID
-	db.Table("user").Where("OID = ?", userToUpdate.OID).Update(&userToUpdate)
+	zapsiUser.Rfid = person.RFID
+	db.Table("user").Save(&zapsiUser)
 	return nil
 }
 
