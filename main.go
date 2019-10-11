@@ -6,6 +6,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,21 +19,24 @@ func main() {
 	SendMail("Program started", "Adoz-data-importer version "+version+" started")
 	LogInfo("MAIN", "Program running")
 	for {
+		start := time.Now()
 		persons, operations, K2DataDownloaded := DownloadDataFromK2()
 		orders, products, users, userTypes, zapsiDataDownloaded := DownloadDataFromZapsi()
 		if K2DataDownloaded && zapsiDataDownloaded {
+			LogInfo("MAIN", "Data download after "+time.Now().Sub(start).String())
 			LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(persons))+" persons")
 			LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(operations))+" operations")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(orders))+" orders")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
+			userProcessingStart := time.Now()
 			for _, person := range persons {
 				personInZapsi := false
 				for _, user := range users {
 					if person.ID_CisP == user.Barcode {
 						personInZapsi = true
-						LogInfo("MAIN", "Person match found: "+person.JMENO+" "+person.PRIJMENI)
+						LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid")
 						// TODO: update user rfid
 						break
 					}
@@ -42,25 +46,29 @@ func main() {
 					// TODO: add user
 				}
 			}
+			LogInfo("MAIN", "Users processed after "+time.Now().Sub(userProcessingStart).String())
 
+			orderProcessingStart := time.Now()
 			for _, operation := range operations {
 				operationInZapsi := false
 				for _, order := range orders {
-					if operation.BARCODE == order.Barcode {
+					if strings.Trim(operation.BARCODE, " ") == order.Barcode {
 						operationInZapsi = true
-						LogInfo("MAIN", "Operation match found: "+operation.BARCODE+" "+operation.OPCODE)
 						break
 					}
 				}
 				if !operationInZapsi {
-					LogInfo("MAIN", "Adding operation "+operation.BARCODE+" "+operation.OPCODE)
+					LogInfo("MAIN", "Adding operation ["+operation.BARCODE+"]")
 					// TODO: check for product, add product
 					// TODO: get product id
 					// TODO: add order with product
 				}
 			}
+			LogInfo("MAIN", "Orders processed after "+time.Now().Sub(orderProcessingStart).String())
 		}
-		time.Sleep(1 * time.Minute)
+		LogInfo("MAIN", "Total time "+time.Now().Sub(start).String())
+		LogInfo("MAIN", "Sleeping for "+(1*time.Minute-time.Now().Sub(start)).String())
+		time.Sleep(1*time.Minute - time.Now().Sub(start))
 	}
 
 }
