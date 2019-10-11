@@ -24,3 +24,49 @@ type ZAPSI_OPERACE struct {
 	NOK         string `gorm:"column:NOK"`
 	POTVRZENI   string `gorm:"column:POTVRZENI"`
 }
+
+type user struct {
+	OID        int    `gorm:"column:OID"`
+	Login      string `gorm:"column:Login"`
+	Password   string `gorm:"column:Password"`
+	Name       string `gorm:"column:Name"`
+	FirstName  string `gorm:"column:FirstName"`
+	Rfid       string `gorm:"column:Rfid"`
+	Barcode    string `gorm:"column:Barcode"`
+	Pin        string `gorm:"column:Pin"`
+	Function   string `gorm:"column:Function"`
+	UserTypeID int    `gorm:"column:UserTypeID"`
+	Email      string `gorm:"column:Email"`
+	Phone      string `gorm:"column:Phone"`
+	UserRoleID int    `gorm:"column:UserRoleID"`
+}
+
+type user_type struct {
+	OID  int    `gorm:"column:OID"`
+	Name string `gorm:"column:Name"`
+}
+
+type order struct {
+	OID            int     `gorm:"column:OID"`
+	Name           string  `gorm:"column:Name"`
+	Barcode        string  `gorm:"column:Barcode"`
+	ProductID      int     `gorm:"column:ProductID"`
+	OrderStatusID  int     `gorm:"column:OrderStatusID"`
+	CountRequested int     `gorm:"column:CountRequested"`
+	Cavity         int     `gorm:"column:Cavity"`
+	OpCode         string  `gorm:"column:OpCode"`
+	OpNormaVyr     float32 `gorm:"column:OpNormaVyr"`
+	OpNormaPrip    float32 `gorm:"column:OpNormaPrip"`
+	Pruvodka       string  `gorm:"column:Pruvodka"`
+}
+
+type product struct {
+	OID             int     `gorm:"column:OID"`
+	Name            string  `gorm:"column:Name"`
+	Barcode         string  `gorm:"column:Barcode"`
+	Cycle           float32 `gorm:"column:Cycle"`
+	IdleFromTime    int     `gorm:"column:IdleFromTime"`
+	ProductStatusID int     `gorm:"column:ProductStatusID"`
+	Deleted         int     `gorm:"column:Deleted"`
+	ProductGroupID  int     `gorm:"column:ProductGroupID"`
+}
