@@ -1,6 +1,10 @@
 package main
 
 import (
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mssql"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 )
 
@@ -10,13 +14,31 @@ const deleteLogsAfter = 240 * time.Hour
 func main() {
 	LogDirectoryFileCheck("MAIN")
 	LogInfo("MAIN", "Program version "+version+" started")
-	CreateConfigIfNotExists()
-	LoadSettingsFromConfigFile()
-	LogDebug("MAIN", "Using ["+DatabaseType+"] on "+DatabaseIpAddress+":"+DatabasePort+" with database "+DatabaseName)
 	SendMail("Program started", "Zapsi Service version "+version+" started")
-	for {
-		LogInfo("MAIN", "Program running")
+	LogInfo("MAIN", "Program running")
+	persons, operations := DownloadDataFromK2()
 
-		time.Sleep(10 * time.Second)
+	for _, person := range persons {
+		LogInfo("MAIN", person.ID_CisP+" "+person.JMENO+" "+person.PRIJMENI)
 	}
+	for _, operation := range operations {
+		LogInfo("MAIN", operation.ID+" "+operation.BARCODE+" "+operation.PRODUKT_NAZ)
+	}
+}
+
+func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE) {
+	connectionString := "sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ"
+	dialect := "mssql"
+	db, err := gorm.Open(dialect, connectionString)
+	if err != nil {
+		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		return nil, nil
+	}
+	defer db.Close()
+	LogInfo("MAIN", "Connected")
+	var persons []ZAPSI_PERS
+	db.Table("ZAPSI_PERS").Find(&persons)
+	var operations []ZAPSI_OPERACE
+	db.Table("ZAPSI_OPERACE").Find(&operations)
+	return persons, operations
 }

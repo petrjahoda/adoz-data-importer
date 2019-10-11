@@ -1,0 +1,12 @@
+2019-10-11 11:27:22.845   MAIN   INF   Program version 2019.4.1.10 started
+2019-10-11 11:27:22.845   MAIN   WRN   Config file does not exist, creating
+2019-10-11 11:27:22.845   MAIN   INF   Directory for config file created
+2019-10-11 11:27:22.845   MAIN   INF   Writing data to JSON file
+2019-10-11 11:27:22.845   MAIN   INF   Data written to config file
+2019-10-11 11:27:23.331   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
+2019-10-11 11:27:23.331   MAIN   INF   Program running
+2019-10-11 11:27:23.331   MAIN   ERR   Problem opening zapsi4 database: sql: unknown driver "mssql" (forgotten import?)
+2019-10-11 11:28:05.911   MAIN   INF   Program version 2019.4.1.10 started
+2019-10-11 11:28:06.278   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
+2019-10-11 11:28:06.279   MAIN   INF   Program running
+2019-10-11 11:28:06.304   MAIN   ERR   Problem opening zapsi4 database: lookup sql: no such host
