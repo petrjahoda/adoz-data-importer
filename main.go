@@ -17,53 +17,61 @@ func main() {
 	LogInfo("MAIN", "Program version "+version+" started")
 	SendMail("Program started", "Adoz-data-importer version "+version+" started")
 	LogInfo("MAIN", "Program running")
-	persons, operations := DownloadDataFromK2()
-	orders, products, users, userTypes := DownloadDataFromZapsi()
-	LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(persons))+" persons")
-	LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(operations))+" operations")
-	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(orders))+" orders")
-	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
-	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
-	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
+	for {
+		persons, operations, K2DataDownloaded := DownloadDataFromK2()
+		orders, products, users, userTypes, zapsiDataDownloaded := DownloadDataFromZapsi()
+		if K2DataDownloaded && zapsiDataDownloaded {
+			LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(persons))+" persons")
+			LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(operations))+" operations")
+			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(orders))+" orders")
+			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
+			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
+			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
+			for _, person := range persons {
+				personInZapsi := false
+				for _, user := range users {
+					if person.ID_CisP == user.Barcode {
+						personInZapsi = true
+						LogInfo("MAIN", "Person match found: "+person.JMENO+" "+person.PRIJMENI)
+						// TODO: update user rfid
+						break
+					}
+				}
+				if !personInZapsi {
+					LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
+					// TODO: add user
+				}
+			}
 
-	for _, person := range persons {
-		personInZapsi := false
-		for _, user := range users {
-			if person.ID_CisP == user.Barcode {
-				personInZapsi = true
-				LogInfo("MAIN", "Person match found: "+person.JMENO+" "+person.PRIJMENI)
-				break
+			for _, operation := range operations {
+				operationInZapsi := false
+				for _, order := range orders {
+					if operation.BARCODE == order.Barcode {
+						operationInZapsi = true
+						LogInfo("MAIN", "Operation match found: "+operation.BARCODE+" "+operation.OPCODE)
+						break
+					}
+				}
+				if !operationInZapsi {
+					LogInfo("MAIN", "Adding operation "+operation.BARCODE+" "+operation.OPCODE)
+					// TODO: check for product, add product
+					// TODO: get product id
+					// TODO: add order with product
+				}
 			}
 		}
-		if !personInZapsi {
-			LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
-		}
-	}
-
-	for _, operation := range operations {
-		operationInZapsi := false
-		for _, order := range orders {
-			if operation.BARCODE == order.Barcode {
-				operationInZapsi = true
-				LogInfo("MAIN", "Operation match found: "+operation.BARCODE+" "+operation.OPCODE)
-
-				break
-			}
-		}
-		if !operationInZapsi {
-			LogInfo("MAIN", "Adding operation "+operation.BARCODE+" "+operation.OPCODE)
-		}
+		time.Sleep(1 * time.Minute)
 	}
 
 }
 
-func DownloadDataFromZapsi() ([]order, []product, []user, []user_type) {
+func DownloadDataFromZapsi() ([]order, []product, []user, []user_type, bool) {
 	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
 	dialect := "mysql"
 	db, err := gorm.Open(dialect, connectionString)
 	if err != nil {
 		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
-		return nil, nil, nil, nil
+		return nil, nil, nil, nil, false
 	}
 	defer db.Close()
 	LogInfo("MAIN", "Zapsi database connected")
@@ -75,16 +83,16 @@ func DownloadDataFromZapsi() ([]order, []product, []user, []user_type) {
 	db.Table("user").Find(&users)
 	var userTypes []user_type
 	db.Table("user_type").Find(&userTypes)
-	return orders, products, users, userTypes
+	return orders, products, users, userTypes, true
 }
 
-func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE) {
+func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE, bool) {
 	connectionString := "sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ"
 	dialect := "mssql"
 	db, err := gorm.Open(dialect, connectionString)
 	if err != nil {
 		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
-		return nil, nil
+		return nil, nil, false
 	}
 	defer db.Close()
 	LogInfo("MAIN", "K2 database connected")
@@ -92,5 +100,5 @@ func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE) {
 	db.Table("ZAPSI_PERS").Find(&persons)
 	var operations []ZAPSI_OPERACE
 	db.Table("ZAPSI_OPERACE").Find(&operations)
-	return persons, operations
+	return persons, operations, true
 }
