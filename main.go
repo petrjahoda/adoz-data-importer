@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const version = "2019.4.1.10"
+const version = "2019.4.1.11"
 const deleteLogsAfter = 240 * time.Hour
 
 func main() {
@@ -30,6 +30,13 @@ func main() {
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
+			connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+			dialect := "mysql"
+			db, err := gorm.Open(dialect, connectionString)
+			if err != nil {
+				LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+				break
+			}
 			userProcessingStart := time.Now()
 			for _, person := range persons {
 				personInZapsi := false
@@ -37,13 +44,37 @@ func main() {
 					if person.ID_CisP == user.Barcode {
 						personInZapsi = true
 						LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid")
-						// TODO: update user rfid
+						user.Rfid = person.RFID
+						db.Save(&user)
 						break
 					}
 				}
 				if !personInZapsi {
 					LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
-					// TODO: add user
+					newuser := user{}
+					newuser.FirstName = person.JMENO
+					newuser.Name = person.PRIJMENI
+					newuser.Rfid = person.RFID
+					newuser.Login = person.K2_UZIV
+					newuser.Barcode = person.ID_CisP
+					switch person.SKUPINA {
+					case "kvalita":
+						newuser.UserTypeID = 2
+					case "manažer":
+						newuser.UserTypeID = 3
+					case "operátor":
+						newuser.UserTypeID = 4
+					case "serizovac":
+						newuser.UserTypeID = 5
+					case "technolog":
+						newuser.UserTypeID = 6
+					case "údržbár":
+						newuser.UserTypeID = 7
+					default:
+						newuser.UserTypeID = 1
+					}
+					db.NewRecord(newuser)
+					db.Create(&newuser)
 				}
 			}
 			LogInfo("MAIN", "Users processed after "+time.Now().Sub(userProcessingStart).String())

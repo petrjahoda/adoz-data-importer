@@ -2,3 +2,6 @@
 2019-10-11 11:27:23.331   MAIN   ERR   Problem opening zapsi4 database: sql: unknown driver "mssql" (forgotten import?)
 2019-10-11 11:28:06.278   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
 2019-10-11 11:28:06.305   MAIN   ERR   Problem opening zapsi4 database: lookup sql: no such host
+2019-10-11 18:39:36.049   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
+2019-10-11 18:39:37.076   MAIN   ERR   Problem opening database sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ, lookup sql: no such host
+2019-10-11 18:39:37.078   MAIN   ERR   Problem opening database zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local, dial tcp [::1]:3306: connect: connection refused
