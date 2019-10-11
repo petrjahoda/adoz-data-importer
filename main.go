@@ -5,6 +5,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"strconv"
 	"time"
 )
 
@@ -17,26 +18,43 @@ func main() {
 	SendMail("Program started", "Adoz-data-importer version "+version+" started")
 	LogInfo("MAIN", "Program running")
 	persons, operations := DownloadDataFromK2()
+	orders, products, users, userTypes := DownloadDataFromZapsi()
+	LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(persons))+" persons")
+	LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(operations))+" operations")
+	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(orders))+" orders")
+	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
+	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
+	LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
+
 	for _, person := range persons {
-		LogInfo("MAIN", person.ID_CisP+" "+person.JMENO+" "+person.PRIJMENI)
-	}
-	for _, operation := range operations {
-		LogInfo("MAIN", operation.ID+" "+operation.BARCODE+" "+operation.PRODUKT_NAZ)
+		personInZapsi := false
+		for _, user := range users {
+			if person.ID_CisP == user.Barcode {
+				personInZapsi = true
+				LogInfo("MAIN", "Person match found: "+person.JMENO+" "+person.PRIJMENI)
+				break
+			}
+		}
+		if !personInZapsi {
+			LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
+		}
 	}
 
-	orders, products, users, userTypes := DownloadDataFromZapsi()
-	for _, order := range orders {
-		LogInfo("MAIN", order.Name)
+	for _, operation := range operations {
+		operationInZapsi := false
+		for _, order := range orders {
+			if operation.BARCODE == order.Barcode {
+				operationInZapsi = true
+				LogInfo("MAIN", "Operation match found: "+operation.BARCODE+" "+operation.OPCODE)
+
+				break
+			}
+		}
+		if !operationInZapsi {
+			LogInfo("MAIN", "Adding operation "+operation.BARCODE+" "+operation.OPCODE)
+		}
 	}
-	for _, product := range products {
-		LogInfo("MAIN", product.Name)
-	}
-	for _, user := range users {
-		LogInfo("MAIN", user.Name)
-	}
-	for _, userType := range userTypes {
-		LogInfo("MAIN", userType.Name)
-	}
+
 }
 
 func DownloadDataFromZapsi() ([]order, []product, []user, []user_type) {
@@ -48,7 +66,7 @@ func DownloadDataFromZapsi() ([]order, []product, []user, []user_type) {
 		return nil, nil, nil, nil
 	}
 	defer db.Close()
-	LogInfo("MAIN", "Connected")
+	LogInfo("MAIN", "Zapsi database connected")
 	var orders []order
 	db.Table("order").Find(&orders)
 	var products []product
@@ -69,7 +87,7 @@ func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE) {
 		return nil, nil
 	}
 	defer db.Close()
-	LogInfo("MAIN", "Connected")
+	LogInfo("MAIN", "K2 database connected")
 	var persons []ZAPSI_PERS
 	db.Table("ZAPSI_PERS").Find(&persons)
 	var operations []ZAPSI_OPERACE
