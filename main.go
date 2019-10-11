@@ -22,6 +22,7 @@ func main() {
 		start := time.Now()
 		persons, operations, K2DataDownloaded := DownloadDataFromK2()
 		orders, products, users, userTypes, zapsiDataDownloaded := DownloadDataFromZapsi()
+
 		if K2DataDownloaded && zapsiDataDownloaded {
 			LogInfo("MAIN", "Data download after "+time.Now().Sub(start).String())
 			LogInfo("MAIN", "K2 Found "+strconv.Itoa(len(persons))+" persons")
@@ -30,51 +31,27 @@ func main() {
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(products))+" products")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(users))+" users")
 			LogInfo("MAIN", "Zapsi Found "+strconv.Itoa(len(userTypes))+" user types")
-			connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
-			dialect := "mysql"
-			db, err := gorm.Open(dialect, connectionString)
-			if err != nil {
-				LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
-				break
-			}
+
 			userProcessingStart := time.Now()
 			for _, person := range persons {
 				personInZapsi := false
-				for _, user := range users {
-					if person.ID_CisP == user.Barcode {
+				for _, zapsiUser := range users {
+					if person.ID_CisP == zapsiUser.Barcode {
 						personInZapsi = true
-						LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid")
-						user.Rfid = person.RFID
-						db.Save(&user)
+						LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid to "+person.RFID)
+						err := UpdateUser(zapsiUser, person)
+						if err != nil {
+							LogError("MAIN", "Problem updating user: "+err.Error())
+							break
+						}
 						break
 					}
 				}
 				if !personInZapsi {
-					LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
-					newuser := user{}
-					newuser.FirstName = person.JMENO
-					newuser.Name = person.PRIJMENI
-					newuser.Rfid = person.RFID
-					newuser.Login = person.K2_UZIV
-					newuser.Barcode = person.ID_CisP
-					switch person.SKUPINA {
-					case "kvalita":
-						newuser.UserTypeID = 2
-					case "manažer":
-						newuser.UserTypeID = 3
-					case "operátor":
-						newuser.UserTypeID = 4
-					case "serizovac":
-						newuser.UserTypeID = 5
-					case "technolog":
-						newuser.UserTypeID = 6
-					case "údržbár":
-						newuser.UserTypeID = 7
-					default:
-						newuser.UserTypeID = 1
+					err := AddUser(person)
+					if err != nil {
+						LogError("MAIN", "Problem adding user "+person.JMENO+" "+person.PRIJMENI+": "+err.Error())
 					}
-					db.NewRecord(newuser)
-					db.Create(&newuser)
 				}
 			}
 			LogInfo("MAIN", "Users processed after "+time.Now().Sub(userProcessingStart).String())
@@ -102,6 +79,54 @@ func main() {
 		time.Sleep(1*time.Minute - time.Now().Sub(start))
 	}
 
+}
+
+func AddUser(person ZAPSI_PERS) error {
+	LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
+	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	dialect := "mysql"
+	db, err := gorm.Open(dialect, connectionString)
+	if err != nil {
+		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		return err
+	}
+	defer db.Close()
+	newUser := user{FirstName: person.JMENO, Name: person.PRIJMENI, Rfid: person.RFID, Login: person.K2_UZIV, Barcode: person.ID_CisP}
+	switch person.SKUPINA {
+	case "kvalita":
+		newUser.UserTypeID = 2
+	case "manažer":
+		newUser.UserTypeID = 3
+	case "operátor":
+		newUser.UserTypeID = 4
+	case "serizovac":
+		newUser.UserTypeID = 5
+	case "technolog":
+		newUser.UserTypeID = 6
+	case "údržbár":
+		newUser.UserTypeID = 7
+	default:
+		newUser.UserTypeID = 1
+	}
+	db.Table("user").NewRecord(newUser)
+	db.Create(&newUser)
+	return nil
+}
+
+func UpdateUser(zapsiUser user, person ZAPSI_PERS) error {
+	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	dialect := "mysql"
+	db, err := gorm.Open(dialect, connectionString)
+	if err != nil {
+		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		return err
+	}
+	defer db.Close()
+	userToUpdate := user{}
+	db.Table("user").Where("Barcode = ?", zapsiUser.Barcode).First(&userToUpdate)
+	userToUpdate.Rfid = person.RFID
+	db.Table("user").Where("OID = ?", userToUpdate.OID).Update(&userToUpdate)
+	return nil
 }
 
 func DownloadDataFromZapsi() ([]order, []product, []user, []user_type, bool) {
