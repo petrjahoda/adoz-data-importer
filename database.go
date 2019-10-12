@@ -47,7 +47,7 @@ type user_type struct {
 }
 
 type order struct {
-	OID            int     `gorm:"column:OID"`
+	OID            int     `gorm:"primary_key;column:OID"`
 	Name           string  `gorm:"column:Name"`
 	Barcode        string  `gorm:"column:Barcode"`
 	ProductID      int     `gorm:"column:ProductID"`
@@ -61,7 +61,7 @@ type order struct {
 }
 
 type product struct {
-	OID             int     `gorm:"column:OID"`
+	OID             int     `gorm:"primary_key;column:OID"`
 	Name            string  `gorm:"column:Name"`
 	Barcode         string  `gorm:"column:Barcode"`
 	Cycle           float32 `gorm:"column:Cycle"`

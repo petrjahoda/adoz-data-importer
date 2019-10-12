@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const version = "2019.4.1.11"
+const version = "2019.4.1.12"
 const deleteLogsAfter = 240 * time.Hour
 
 func main() {
@@ -67,7 +67,7 @@ func ProcessUsers(persons []ZAPSI_PERS, users []user) {
 		for _, zapsiUser := range users {
 			if person.ID_CisP == zapsiUser.Barcode {
 				personInZapsi = true
-				LogInfo("MAIN", person.JMENO+" "+person.PRIJMENI+": updating rfid to ["+person.RFID+"]")
+				LogInfo("MAIN", "    "+person.JMENO+" "+person.PRIJMENI+": updating rfid to ["+person.RFID+"]")
 				err := UpdateUser(zapsiUser, person)
 				if err != nil {
 					LogError("MAIN", "Problem updating user: "+err.Error())
@@ -94,7 +94,7 @@ func AddUser(person ZAPSI_PERS) error {
 		return err
 	}
 	defer db.Close()
-	newUser := user{FirstName: person.JMENO, Name: person.PRIJMENI, Rfid: person.RFID, Login: person.K2_UZIV, Barcode: person.ID_CisP}
+	newUser := user{FirstName: person.JMENO, Name: person.PRIJMENI, Rfid: person.RFID, Login: person.K2_UZIV, Barcode: person.ID_CisP, UserRoleID: 2}
 	switch person.SKUPINA {
 	case "kvalita":
 		newUser.UserTypeID = 2
@@ -111,8 +111,8 @@ func AddUser(person ZAPSI_PERS) error {
 	default:
 		newUser.UserTypeID = 1
 	}
-	db.Table("user").NewRecord(newUser)
-	db.Create(&newUser)
+	db.NewRecord(newUser)
+	db.Table("user").Create(&newUser)
 	return nil
 }
 
