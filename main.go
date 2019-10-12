@@ -95,7 +95,8 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 		opNormaVyr = 0
 	}
 	newOrder := order{Name: operation.BARCODE, Barcode: operation.BARCODE, Pruvodka: operation.PRUVODKA,
-		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip, OpNormaVyr: opNormaVyr, ProductID: productOID}
+		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip,
+		OpNormaVyr: opNormaVyr, ProductID: productOID, OrderStatusID: 1, Cavity: 1}
 	db.NewRecord(newOrder)
 	db.Table("order").Create(&newOrder)
 	return nil
