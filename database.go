@@ -41,11 +41,6 @@ type user struct {
 	UserRoleID int    `gorm:"column:UserRoleID"`
 }
 
-type user_type struct {
-	OID  int    `gorm:"column:OID"`
-	Name string `gorm:"column:Name"`
-}
-
 type order struct {
 	OID            int     `gorm:"primary_key;column:OID"`
 	Name           string  `gorm:"column:Name"`
@@ -55,8 +50,8 @@ type order struct {
 	CountRequested int     `gorm:"column:CountRequested"`
 	Cavity         int     `gorm:"column:Cavity"`
 	OpCode         string  `gorm:"column:OpCode"`
-	OpNormaVyr     float32 `gorm:"column:OpNormaVyr"`
-	OpNormaPrip    float32 `gorm:"column:OpNormaPrip"`
+	OpNormaVyr     float64 `gorm:"column:OpNormaVyr"`
+	OpNormaPrip    float64 `gorm:"column:OpNormaPrip"`
 	Pruvodka       string  `gorm:"column:Pruvodka"`
 }
 
