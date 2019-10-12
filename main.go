@@ -33,6 +33,7 @@ func main() {
 		}
 		LogInfo("MAIN", "Total time "+time.Now().Sub(start).String())
 		LogInfo("MAIN", "Sleeping for "+(1*time.Minute-time.Now().Sub(start)).String())
+		DeleteOldLogFiles()
 		time.Sleep(1*time.Minute - time.Now().Sub(start))
 	}
 
