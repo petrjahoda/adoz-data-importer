@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const version = "2019.4.1.12"
+const version = "2019.4.1.13"
 const deleteLogsAfter = 240 * time.Hour
 
 func main() {
@@ -42,9 +42,10 @@ func main() {
 func ProcessOperations(operations []ZAPSI_OPERACE, orders []order) {
 	for _, operation := range operations {
 		operationInZapsi := false
-		for _, order := range orders {
+		for idx, order := range orders {
 			if strings.Trim(operation.BARCODE, " ") == order.Barcode {
 				operationInZapsi = true
+				orders = append(orders[0:idx], orders[idx+1:]...)
 				break
 			}
 		}
@@ -106,11 +107,11 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 func ProcessUsers(persons []ZAPSI_PERS, users []user) {
 	for _, person := range persons {
 		personInZapsi := false
-		for _, zapsiUser := range users {
+		for idx, zapsiUser := range users {
 			if person.ID_CisP == zapsiUser.Barcode {
 				personInZapsi = true
-				LogInfo("MAIN", "    "+person.JMENO+" "+person.PRIJMENI+": updating rfid to ["+person.RFID+"]")
 				err := UpdateUser(zapsiUser, person)
+				users = append(users[0:idx], users[idx+1:]...)
 				if err != nil {
 					LogError("MAIN", "Problem updating user: "+err.Error())
 				}

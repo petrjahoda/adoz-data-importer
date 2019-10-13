@@ -1,0 +1,7 @@
+2019-10-12 12:09:08.122   MAIN   INF   Program version 2019.4.1.12 started
+2019-10-12 12:09:09.177   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
+2019-10-12 12:09:09.177   MAIN   INF   Program running
+2019-10-12 12:09:09.211   MAIN   ERR   Problem opening database sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ, lookup sql: no such host
+2019-10-12 12:09:09.213   MAIN   ERR   Problem opening database zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local, dial tcp [::1]:3306: connect: connection refused
+2019-10-12 12:09:09.213   MAIN   INF   Total time 35.479637ms
+2019-10-12 12:09:09.213   MAIN   INF   Sleeping for 59.964448443s
