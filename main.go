@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const version = "2019.4.1.13"
+const version = "2019.4.1.14"
 const deleteLogsAfter = 240 * time.Hour
 
 func main() {
@@ -69,15 +69,15 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 	}
 	defer db.Close()
 	newProduct := product{}
-	db.Table("newProduct").Where("Name = ?", operation.PRODUKT_NAZ).First(&newProduct)
+	db.Table("product").Where("Name = ?", operation.PRODUKT_NAZ).First(&newProduct)
 	if newProduct.OID == 0 {
-		LogInfo("MAIN", "Adding new newProduct "+operation.PRODUKT_NAZ)
+		LogInfo("MAIN", "Adding new product "+operation.PRODUKT_NAZ)
 		newProduct.Barcode = operation.PRODUKT_ZKR
 		db.NewRecord(newProduct)
-		db.Table("newProduct").Create(&newProduct)
+		db.Table("product").Create(&newProduct)
 	}
 	alteredProduct := product{}
-	db.Table("newProduct").Where("Name = ?", operation.PRODUKT_NAZ).First(&alteredProduct)
+	db.Table("product").Where("Name = ?", operation.PRODUKT_NAZ).First(&alteredProduct)
 	productOID := alteredProduct.OID
 	countRequested, countError := strconv.Atoi(operation.PLAN_KS)
 	if countError != nil {
@@ -96,7 +96,7 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 		LogError("MAIN", "Problem parsing vyr "+operation.NORMA_PRIP+", "+normaVyrErr.Error())
 		opNormaVyr = 0
 	}
-	newOrder := order{Name: operation.BARCODE, Barcode: operation.BARCODE, Pruvodka: operation.PRUVODKA,
+	newOrder := order{Name: strings.Trim(operation.BARCODE, " "), Barcode: strings.Trim(operation.BARCODE, " "), Pruvodka: operation.PRUVODKA,
 		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip,
 		OpNormaVyr: opNormaVyr, ProductID: productOID, OrderStatusID: 1, Cavity: 1}
 	db.NewRecord(newOrder)
