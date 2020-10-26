@@ -1,0 +1,11 @@
+2020-10-26 08:37:16.816   MAIN   INF   Program version 2019.4.1.14 started
+2020-10-26 08:37:17.180   MAIN   ERR   Email not sent: 535 5.7.0 ...authentication rejected (Use LOGIN or PLAIN Authentication, please)
+2020-10-26 08:37:17.181   MAIN   INF   Program running
+2020-10-26 08:37:17.216   MAIN   ERR   Problem opening database sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ, lookup sql: no such host
+2020-10-26 08:37:17.218   MAIN   ERR   Problem opening database zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local, dial tcp [::1]:3306: connect: connection refused
+2020-10-26 08:37:17.218   MAIN   INF   Total time 36.554439ms
+2020-10-26 08:37:17.218   MAIN   INF   Sleeping for 59.963357103s
+2020-10-26 08:37:17.218   MAIN   INF   Deleting old log file MAIN 2019-10-12.err with age of 9117h28m8.005141582s
+2020-10-26 08:37:17.219   MAIN   INF   Deleting old log file MAIN 2019-10-12.log with age of 9117h28m8.004956052s
+2020-10-26 08:37:17.219   MAIN   INF   Deleting old log file MAIN 2019-10-14.err with age of 9061h39m58.539748657s
+2020-10-26 08:37:17.220   MAIN   INF   Deleting old log file MAIN 2019-10-14.log with age of 9061h39m58.539535019s
