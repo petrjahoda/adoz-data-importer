@@ -62,6 +62,7 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
 	dialect := "mysql"
 	db, err := gorm.Open(dialect, connectionString)
+	db.LogMode(true)
 	if err != nil {
 		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
 		return err
@@ -95,11 +96,13 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 		LogError("MAIN", "Problem parsing vyr "+operation.NORMA_PRIP+", "+normaVyrErr.Error())
 		opNormaVyr = 0
 	}
+	LogInfo("MAIN", "Before adding")
 	newOrder := order{Name: strings.Trim(operation.BARCODE, " "), Barcode: strings.Trim(operation.BARCODE, " "), Pruvodka: operation.PRUVODKA,
 		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip,
 		OpNormaVyr: opNormaVyr, ProductID: productOID, OrderStatusID: 1, Cavity: 1}
 	db.Debug().NewRecord(newOrder)
 	db.Debug().Table("order").Create(&newOrder)
+	LogInfo("MAIN", "After adding")
 	return nil
 }
 
