@@ -41,6 +41,10 @@ type user struct {
 	UserRoleID int    `gorm:"column:UserRoleID"`
 }
 
+func (user) TableName() string {
+	return "user"
+}
+
 type order struct {
 	OID            int     `gorm:"primary_key;column:OID"`
 	Name           string  `gorm:"column:Name"`
@@ -55,6 +59,10 @@ type order struct {
 	Pruvodka       string  `gorm:"column:Pruvodka"`
 }
 
+func (order) TableName() string {
+	return "order"
+}
+
 type product struct {
 	OID             int     `gorm:"primary_key;column:OID"`
 	Name            string  `gorm:"column:Name"`
@@ -64,4 +72,8 @@ type product struct {
 	ProductStatusID int     `gorm:"column:ProductStatusID"`
 	Deleted         int     `gorm:"column:Deleted"`
 	ProductGroupID  int     `gorm:"column:ProductGroupID"`
+}
+
+func (product) TableName() string {
+	return "product"
 }

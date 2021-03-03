@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mssql"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
 	"strconv"
 	"strings"
 	"time"
@@ -59,26 +59,29 @@ func ProcessOperations(operations []ZAPSI_OPERACE, orders []order) {
 }
 
 func AddOrder(operation ZAPSI_OPERACE) error {
-	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
-	dialect := "mysql"
-	db, err := gorm.Open(dialect, connectionString)
-	db.LogMode(true)
+	//connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	//dialect := "mysql"
+	//db, err := gorm.Open(dialect, connectionString)
+	//db.LogMode(true)
+	db, err := gorm.Open(mysql.Open("zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
 	if err != nil {
-		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		LogError("MAIN", "Problem opening zapsi database "+err.Error())
 		return err
 	}
-	defer db.Close()
 	newProduct := product{}
 	db.Table("product").Where("Name = ?", operation.PRODUKT_NAZ).First(&newProduct)
 	if newProduct.OID == 0 {
 		LogInfo("MAIN", "Adding new product "+operation.PRODUKT_NAZ)
 		newProduct.Barcode = operation.PRODUKT_ZKR
-		db.NewRecord(newProduct)
-		db.Table("product").Create(&newProduct)
+		newProduct.ProductStatusID = 1
+		newProduct.ProductGroupID = 1
+		db.Create(&newProduct)
 	}
 	alteredProduct := product{}
-	db.Table("product").Where("Name = ?", operation.PRODUKT_NAZ).First(&alteredProduct)
-	productOID := alteredProduct.OID
+	db.Table("product").Where("Barcode = ?", operation.PRODUKT_ZKR).First(&alteredProduct)
 	countRequested, countError := strconv.Atoi(operation.PLAN_KS)
 	if countError != nil {
 		LogError("MAIN", "Problem parsing plan_ks "+operation.PLAN_KS+", "+countError.Error())
@@ -96,13 +99,10 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 		LogError("MAIN", "Problem parsing vyr "+operation.NORMA_PRIP+", "+normaVyrErr.Error())
 		opNormaVyr = 0
 	}
-	LogInfo("MAIN", "Before adding")
 	newOrder := order{Name: strings.Trim(operation.BARCODE, " "), Barcode: strings.Trim(operation.BARCODE, " "), Pruvodka: operation.PRUVODKA,
 		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip,
-		OpNormaVyr: opNormaVyr, ProductID: productOID, OrderStatusID: 1, Cavity: 1}
-	db.Debug().NewRecord(newOrder)
-	db.Debug().Table("order").Create(&newOrder)
-	LogInfo("MAIN", "After adding")
+		OpNormaVyr: opNormaVyr, ProductID: alteredProduct.OID, OrderStatusID: 1, Cavity: 1}
+	db.Debug().Create(&newOrder)
 	return nil
 }
 
@@ -131,12 +131,15 @@ func ProcessUsers(persons []ZAPSI_PERS, users []user) {
 
 func AddUser(person ZAPSI_PERS) error {
 	LogInfo("MAIN", "Adding person "+person.JMENO+" "+person.PRIJMENI)
-	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
-	dialect := "mysql"
-	db, err := gorm.Open(dialect, connectionString)
-	defer db.Close()
+	//connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	//dialect := "mysql"
+	//db, err := gorm.Open(dialect, connectionString)
+	//defer db.Close()
+	db, err := gorm.Open(mysql.Open("zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 	if err != nil {
-		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		LogError("MAIN", "Problem opening zapsi database "+err.Error())
 		return err
 	}
 	newUser := user{FirstName: person.JMENO, Name: person.PRIJMENI, Rfid: person.RFID, Login: person.K2_UZIV, Barcode: person.ID_CisP, UserRoleID: 2}
@@ -156,18 +159,22 @@ func AddUser(person ZAPSI_PERS) error {
 	default:
 		newUser.UserTypeID = 1
 	}
-	db.NewRecord(newUser)
-	db.Table("user").Create(&newUser)
+	db.Create(&newUser)
+	//db.NewRecord(newUser)
+	//db.Table("user").Create(&newUser)
 	return nil
 }
 
 func UpdateUser(zapsiUser user, person ZAPSI_PERS) error {
-	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
-	dialect := "mysql"
-	db, err := gorm.Open(dialect, connectionString)
-	defer db.Close()
+	//connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	//dialect := "mysql"
+	//db, err := gorm.Open(dialect, connectionString)
+	//defer db.Close()
+	db, err := gorm.Open(mysql.Open("zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 	if err != nil {
-		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		LogError("MAIN", "Problem opening zapsi database "+err.Error())
 		return err
 	}
 	zapsiUser.Rfid = person.RFID
@@ -176,12 +183,15 @@ func UpdateUser(zapsiUser user, person ZAPSI_PERS) error {
 }
 
 func DownloadDataFromZapsi() ([]order, []user, bool) {
-	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
-	dialect := "mysql"
-	db, err := gorm.Open(dialect, connectionString)
-	defer db.Close()
+	//connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
+	//dialect := "mysql"
+	//db, err := gorm.Open(dialect, connectionString)
+	//defer db.Close()
+	db, err := gorm.Open(mysql.Open("zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
 	if err != nil {
-		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		LogError("MAIN", "Problem opening zapsi database "+err.Error())
 		return nil, nil, false
 	}
 	LogInfo("MAIN", "Zapsi database connected")
@@ -195,12 +205,16 @@ func DownloadDataFromZapsi() ([]order, []user, bool) {
 }
 
 func DownloadDataFromK2() ([]ZAPSI_PERS, []ZAPSI_OPERACE, bool) {
-	connectionString := "sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ"
-	dialect := "mssql"
-	db, err := gorm.Open(dialect, connectionString)
-	defer db.Close()
+	//connectionString := "sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ"
+	//dialect := "mssql"
+	//db, err := gorm.Open(dialect, connectionString)
+	//defer db.Close()
+	db, err := gorm.Open(sqlserver.Open("sqlserver://zapsi:RuruRavePivo92@sql:1433?database=K2_ADOZ"), &gorm.Config{})
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
 	if err != nil {
-		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
+		LogError("MAIN", "Problem opening k2 database "+err.Error())
 		return nil, nil, false
 	}
 	LogInfo("MAIN", "K2 database connected")
