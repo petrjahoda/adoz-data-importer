@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const version = "2020.4.1.26"
+const version = "2021.1.3.3"
 const deleteLogsAfter = 240 * time.Hour
 
 func main() {
@@ -98,8 +98,8 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 	newOrder := order{Name: strings.Trim(operation.BARCODE, " "), Barcode: strings.Trim(operation.BARCODE, " "), Pruvodka: operation.PRUVODKA,
 		OpCode: operation.OPCODE, CountRequested: countRequested, OpNormaPrip: opNormaPrip,
 		OpNormaVyr: opNormaVyr, ProductID: productOID, OrderStatusID: 1, Cavity: 1}
-	db.NewRecord(newOrder)
-	db.Table("order").Create(&newOrder)
+	db.Debug().NewRecord(newOrder)
+	db.Debug().Table("order").Create(&newOrder)
 	return nil
 }
 
