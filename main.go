@@ -62,11 +62,11 @@ func AddOrder(operation ZAPSI_OPERACE) error {
 	connectionString := "zapsi_uzivatel:zapsi@tcp(localhost:3306)/zapsi2?charset=utf8&parseTime=True&loc=Local"
 	dialect := "mysql"
 	db, err := gorm.Open(dialect, connectionString)
-	defer db.Close()
 	if err != nil {
 		LogError("MAIN", "Problem opening database "+connectionString+", "+err.Error())
 		return err
 	}
+	defer db.Close()
 	newProduct := product{}
 	db.Table("product").Where("Name = ?", operation.PRODUKT_NAZ).First(&newProduct)
 	if newProduct.OID == 0 {
